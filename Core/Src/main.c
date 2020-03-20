@@ -20,7 +20,8 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-
+#include "../Graphics/lvgl/lvgl.h"
+#include "../Graphics/lv_conf.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "../Lcd/lcd.h"
@@ -40,6 +41,8 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+CRC_HandleTypeDef hcrc;
+
 SPI_HandleTypeDef hspi2;
 
 /* USER CODE BEGIN PV */
@@ -50,13 +53,15 @@ SPI_HandleTypeDef hspi2;
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_SPI2_Init(void);
+static void MX_CRC_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+static lv_disp_buf_t disp_buf;
+static lv_color_t buf[LV_HOR_RES_MAX * 10];                     /*Declare a buffer for 10 lines*/
 /* USER CODE END 0 */
 
 /**
@@ -89,6 +94,7 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_SPI2_Init();
+  MX_CRC_Init();
   /* USER CODE BEGIN 2 */
   /* USER CODE END 2 */
  
@@ -98,36 +104,80 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET); // Chip Select
 
+  // Init graphics
+  lv_init();
+
+  /*Initialize the display buffer*/
+  lv_disp_buf_init(&disp_buf, buf, NULL, LV_HOR_RES_MAX * 10);
+
+  // Initializing the display driver
+  lv_disp_drv_t disp_drv;               /*Descriptor of a display driver*/
+  lv_disp_drv_init(&disp_drv);          /*Basic initialization*/
+  disp_drv.flush_cb = my_disp_flush;    /*Set your driver function*/
+  disp_drv.buffer = &disp_buf;          /*Assign the buffer to the display*/
+  lv_disp_drv_register(&disp_drv);      /*Finally register the driver*/
+
+  // Init LCD
   LCD_Init();
+
+  // Create button
+  lv_obj_t * btn = lv_btn_create(lv_scr_act(), NULL);     /*Add a button the current screen*/
+  lv_obj_set_pos(btn, 10, 10);                            /*Set its position*/
+  lv_obj_set_size(btn, 100, 50);                          /*Set its size*/
+
+  lv_obj_t * label = lv_label_create(btn, NULL);          /*Add a label to the button*/
+  lv_label_set_text(label, "Button");                     /*Set the labels text*/
+
+  // Initialize colors
+  lv_color_t emerald = lv_color_make(2, 46, 3);
+  lv_color_t gold = lv_color_make(26, 43, 4);
+  lv_color_t white = lv_color_make(31, 63, 31);
+
+  // Set button style
+  static lv_style_t style_btn_rel;                        /*A variable to store the released style*/
+  lv_style_copy(&style_btn_rel, &lv_style_plain);         /*Initialize from a built-in style*/
+  style_btn_rel.body.border.color = gold;
+  style_btn_rel.body.border.width = 1;
+  style_btn_rel.body.main_color = white;
+  style_btn_rel.body.grad_color = white;
+  style_btn_rel.body.radius = LV_RADIUS_CIRCLE;
+  style_btn_rel.text.color = gold;
+
+  lv_btn_set_style(btn, LV_BTN_STYLE_REL, &style_btn_rel);    /*Set the button's released style*/
+
 
   while (1)
   {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	LCD_Clear(  0,0,80,320,LCD_COLOR_RED);
-	LCD_Clear( 80,0,80,320,LCD_COLOR_GREEN);
-	LCD_Clear(160,0,80,320,LCD_COLOR_BLUE);
-	HAL_Delay(30);
+//	LCD_Clear(  0,0,80,320,LCD_COLOR_RED);
+//	LCD_Clear( 80,0,80,320,LCD_COLOR_GREEN);
+//	LCD_Clear(160,0,80,320,LCD_COLOR_BLUE);
+//	HAL_Delay(30);
+//
+//	LCD_SetColors(LCD_COLOR_WHITE,LCD_COLOR_BLACK);
+//	LCD_Clear(0,0,240,320,LCD_COLOR_BLACK);		//BLACK
+//	HAL_Delay(30);
+//
+//	LCD_DispRec(0,0,240,320);
+//	HAL_Delay(30);
+//
+//	LCD_Clear(0,0,240,320,LCD_COLOR_WHITE);		//WHITE
+//	HAL_Delay(30);
+//
+//	LCD_Clear(0,0,240,320,LCD_COLOR_RED);			//RED
+//	HAL_Delay(30);
+//
+//	LCD_Clear(0,0,240,320,LCD_COLOR_GREEN);		//GREEN
+//	HAL_Delay(30);
+//
+//	LCD_Clear(0,0,240,320,LCD_COLOR_BLUE);		//BLUE
+//	HAL_Delay(30);
 
-	LCD_SetColors(LCD_COLOR_WHITE,LCD_COLOR_BLACK);
-	LCD_Clear(0,0,240,320,LCD_COLOR_BLACK);		//BLACK
-	HAL_Delay(30);
-
-	LCD_DispRec(0,0,240,320);
-	HAL_Delay(30);
-
-	LCD_Clear(0,0,240,320,LCD_COLOR_WHITE);		//WHITE
-	HAL_Delay(30);
-
-	LCD_Clear(0,0,240,320,LCD_COLOR_RED);			//RED
-	HAL_Delay(30);
-
-	LCD_Clear(0,0,240,320,LCD_COLOR_GREEN);		//GREEN
-	HAL_Delay(30);
-
-	LCD_Clear(0,0,240,320,LCD_COLOR_BLUE);		//BLUE
-	HAL_Delay(30);
+	HAL_Delay(10);
+	lv_tick_inc(10);
+	lv_task_handler();
   }
   /* USER CODE END 3 */
 }
@@ -179,6 +229,37 @@ void SystemClock_Config(void)
 }
 
 /**
+  * @brief CRC Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_CRC_Init(void)
+{
+
+  /* USER CODE BEGIN CRC_Init 0 */
+
+  /* USER CODE END CRC_Init 0 */
+
+  /* USER CODE BEGIN CRC_Init 1 */
+
+  /* USER CODE END CRC_Init 1 */
+  hcrc.Instance = CRC;
+  hcrc.Init.DefaultPolynomialUse = DEFAULT_POLYNOMIAL_ENABLE;
+  hcrc.Init.DefaultInitValueUse = DEFAULT_INIT_VALUE_ENABLE;
+  hcrc.Init.InputDataInversionMode = CRC_INPUTDATA_INVERSION_NONE;
+  hcrc.Init.OutputDataInversionMode = CRC_OUTPUTDATA_INVERSION_DISABLE;
+  hcrc.InputDataFormat = CRC_INPUTDATA_FORMAT_BYTES;
+  if (HAL_CRC_Init(&hcrc) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN CRC_Init 2 */
+
+  /* USER CODE END CRC_Init 2 */
+
+}
+
+/**
   * @brief SPI2 Initialization Function
   * @param None
   * @retval None
@@ -201,7 +282,7 @@ static void MX_SPI2_Init(void)
   hspi2.Init.CLKPolarity = SPI_POLARITY_HIGH;
   hspi2.Init.CLKPhase = SPI_PHASE_2EDGE;
   hspi2.Init.NSS = SPI_NSS_SOFT;
-  hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_256;
+  hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
   hspi2.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi2.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi2.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
@@ -250,11 +331,18 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Alternate = GPIO_AF7_USART2;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : LD4_Pin PA8 PA10 PA11 */
-  GPIO_InitStruct.Pin = LD4_Pin|GPIO_PIN_8|GPIO_PIN_10|GPIO_PIN_11;
+  /*Configure GPIO pins : LD4_Pin PA8 */
+  GPIO_InitStruct.Pin = LD4_Pin|GPIO_PIN_8;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PA10 PA11 */
+  GPIO_InitStruct.Pin = GPIO_PIN_10|GPIO_PIN_11;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
 }

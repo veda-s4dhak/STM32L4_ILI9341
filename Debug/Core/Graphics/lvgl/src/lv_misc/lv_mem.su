@@ -1,0 +1,11 @@
+lv_mem.c:86:6:lv_mem_init	16	static
+lv_mem.c:109:6:lv_mem_deinit	16	static
+lv_mem.c:125:8:lv_mem_alloc	24	static
+lv_mem.c:191:6:lv_mem_free	24	static
+lv_mem.c:240:8:lv_mem_realloc	32	static
+lv_mem.c:292:6:lv_mem_defrag	16	static
+lv_mem.c:336:6:lv_mem_monitor	24	static
+lv_mem.c:378:10:lv_mem_get_size	24	static
+lv_mem.c:407:23:ent_get_next	24	static
+lv_mem.c:429:15:ent_alloc	24	static
+lv_mem.c:452:13:ent_trunc	24	static

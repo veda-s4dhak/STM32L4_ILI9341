@@ -1,3 +1,4 @@
+lv_color.h:378:24:lv_color_to32	24	static
 lcd.c:17:6:LCD_Init	8	static
 lcd.c:23:6:LCD_ILI9341_Reset	8	static
 lcd.c:35:6:LCD_ILI9341_Init	8	static
@@ -9,3 +10,4 @@ lcd.c:200:6:LCD_Clear	32	static
 lcd.c:214:6:LCD_DispRec	32	static
 lcd.c:230:6:LCD_SetPoint	16	static
 lcd.c:238:6:LCD_SetCursor	16	static
+lcd.c:245:6:my_disp_flush	48	static

@@ -9,6 +9,8 @@
 #define LCD_LCD_H_
 
 #include "main.h"
+#include "../Graphics/lvgl/lvgl.h"
+#include "../Graphics/lv_conf.h"
 #include <stdint.h>
 
 SPI_HandleTypeDef hspi2;
@@ -50,5 +52,7 @@ void LCD_SetColors(u32 _TextColor, u32 _BackColor);
 void LCD_DispRec(u16 x,u16 y,u16 width,u16 height);
 void LCD_SetPoint(u16 x , u16 y);
 void LCD_SetCursor(u16 x, u16 y);
+
+void my_disp_flush(lv_disp_t * disp, const lv_area_t * area, lv_color_t * color_p);
 
 #endif /* LCD_LCD_H_ */

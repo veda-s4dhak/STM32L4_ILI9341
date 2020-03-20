@@ -190,11 +190,11 @@ void LCD_OpenWindow(u16 x, u16 y, u16 width, u16 height)
 	LCD_ILI9341_DATA( (x+width-1) >> 8 );
 	LCD_ILI9341_DATA( (x+width-1) & 0x00FF );
 
-//	LCD_ILI9341_CMD(0x2B); 			 	/* ÉèÖÃY×ø±ê*/
-//	LCD_ILI9341_DATA( y >> 8 );
-//	LCD_ILI9341_DATA( y & 0x00FF );
-//	LCD_ILI9341_DATA( (y+height-1) >> 8);
-//	LCD_ILI9341_DATA( (y+height-1) & 0x00FF);
+	LCD_ILI9341_CMD(0x2B); 			 	/* ÉèÖÃY×ø±ê*/
+	LCD_ILI9341_DATA( y >> 8 );
+	LCD_ILI9341_DATA( y & 0x00FF );
+	LCD_ILI9341_DATA( (y+height-1) >> 8);
+	LCD_ILI9341_DATA( (y+height-1) & 0x00FF);
 }
 
 void LCD_Clear(u16 x, u16 y, u16 width, u16 height, u32 color)
@@ -239,5 +239,62 @@ void LCD_SetCursor(u16 x, u16 y)
 {
 	LCD_OpenWindow(x,y,1,1);
 }
+
+// ------------------------------ LGVL PORT
+
+void my_disp_flush(lv_disp_t * disp, const lv_area_t * area, lv_color_t * color_p)
+{
+	u16 x = area->x1;
+	u16 y = area->y1;
+	u16 height = (area->y2-area->y1)+1;
+	u16 width =  (area->x2-area->x1)+1;
+
+	u16 color;
+	LCD_OpenWindow(x, y,width, height);
+
+	LCD_ILI9341_CMD(0x2C);
+	int y_count = 0;
+	int k = 0;
+	for (int i=0; i<width*height; i++)
+	{
+		if (i%240 == 0)
+		{
+			y_count = y_count + 1;
+		}
+
+		if (y > 300)
+		{
+			k++;
+		}
+
+		color = (u16) lv_color_to32(*color_p);
+
+		LCD_ILI9341_DATA( color >> 8 );
+		LCD_ILI9341_DATA( color &0xFF);
+
+		color_p++;
+	}
+
+    lv_disp_flush_ready(disp);         /* Indicate you are ready with the flushing*/
+}
+
+//void my_disp_flush(lv_disp_t * disp, const lv_area_t * area, lv_color_t * color_p)
+//{
+//
+//	for(u16 y = area->y1; y <= area->y2; y++) {
+//	        for(u16 x = area->x1; x <= area->x2; x++) {
+//	        	TextColor = lv_color_to32(*color_p);
+//	        	LCD_SetPoint(x, y);
+//	        	color_p++;
+//	        }
+//	    }
+//
+//    lv_disp_flush_ready(disp);         /* Indicate you are ready with the flushing*/
+//}
+
+
+// ------------------------------ LGVL PORT
+
+
 
 #endif LCD_H
